@@ -2,10 +2,151 @@
 #include "config.hpp"
 #include <SFML/Graphics.hpp>
 #include <array>
+#include <assert.h>
+#include <chrono>
 #include <iostream>
 #include <map>
 #include <random>
+#include <tuple>
 #include <vector>
+
+void match_digit(const unsigned int num, sf::Sprite &sprite) {
+  sf::Rect flags_digit_0_rect(0, 0, 21, 32);
+  sf::Rect flags_digit_1_rect(21, 0, 21, 32);
+  sf::Rect flags_digit_2_rect(2 * 21, 0, 21, 32);
+  sf::Rect flags_digit_3_rect(3 * 21, 0, 21, 32);
+  sf::Rect flags_digit_4_rect(4 * 21, 0, 21, 32);
+  sf::Rect flags_digit_5_rect(5 * 21, 0, 21, 32);
+  sf::Rect flags_digit_6_rect(6 * 21, 0, 21, 32);
+  sf::Rect flags_digit_7_rect(7 * 21, 0, 21, 32);
+  sf::Rect flags_digit_8_rect(8 * 21, 0, 21, 32);
+  sf::Rect flags_digit_9_rect(9 * 21, 0, 21, 32);
+  sf::Rect flags_digit_negative_sign_rect(10 * 21, 0, 21, 32);
+  switch (num) {
+  case 0:
+    sprite.setTextureRect(flags_digit_0_rect);
+    break;
+  case 1:
+    sprite.setTextureRect(flags_digit_1_rect);
+    break;
+  case 2:
+    sprite.setTextureRect(flags_digit_2_rect);
+    break;
+  case 3:
+    sprite.setTextureRect(flags_digit_3_rect);
+    break;
+  case 4:
+    sprite.setTextureRect(flags_digit_4_rect);
+    break;
+  case 5:
+    sprite.setTextureRect(flags_digit_5_rect);
+    break;
+  case 6:
+    sprite.setTextureRect(flags_digit_6_rect);
+    break;
+  case 7:
+    sprite.setTextureRect(flags_digit_7_rect);
+    break;
+  case 8:
+    sprite.setTextureRect(flags_digit_8_rect);
+    break;
+  case 9:
+    sprite.setTextureRect(flags_digit_9_rect);
+    break;
+  default:
+    sprite.setTextureRect(flags_digit_9_rect);
+    break;
+  }
+}
+
+std::tuple<sf::Sprite, sf::Sprite, sf::Sprite>
+set_flag_digits(const std::map<std::string, sf::Texture *> &textures,
+                const unsigned int rows, const int num) {
+  std::string num_str = std::to_string(num);
+  assert(num_str.size() <= 3);
+
+  sf::Sprite flags_first_digit_sprite;
+  sf::Sprite flags_second_digit_sprite;
+  sf::Sprite flags_third_digit_sprite;
+  flags_first_digit_sprite.setTexture(*textures.at("digits"));
+  flags_second_digit_sprite.setTexture(*textures.at("digits"));
+  flags_third_digit_sprite.setTexture(*textures.at("digits"));
+
+  sf::Rect flags_digit_0_rect(0, 0, 21, 32);
+  sf::Rect flags_digit_negative_sign_rect(10 * 21, 0, 21, 32);
+  if (num_str.size() == 3) {
+    if (num < 0) {
+      flags_first_digit_sprite.setTextureRect(flags_digit_negative_sign_rect);
+    } else {
+      match_digit(std::stoi(num_str.substr(0, 1)), flags_first_digit_sprite);
+    }
+    match_digit(std::stoi(num_str.substr(1, 1)), flags_second_digit_sprite);
+    match_digit(std::stoi(num_str.substr(2, 1)), flags_third_digit_sprite);
+  } else if (num_str.size() == 2) {
+    if (num < 0) {
+      flags_second_digit_sprite.setTextureRect(flags_digit_negative_sign_rect);
+    } else {
+      match_digit(std::stoi(num_str.substr(0, 1)), flags_second_digit_sprite);
+    }
+    flags_first_digit_sprite.setTextureRect(flags_digit_0_rect);
+    match_digit(std::stoi(num_str.substr(1, 1)), flags_third_digit_sprite);
+  } else if (num_str.size() == 1) {
+    flags_first_digit_sprite.setTextureRect(flags_digit_0_rect);
+    flags_second_digit_sprite.setTextureRect(flags_digit_0_rect);
+    match_digit(std::stoi(num_str.substr(0, 1)), flags_third_digit_sprite);
+  }
+
+  flags_first_digit_sprite.setPosition(33, 32 * (rows + 0.5));
+  flags_second_digit_sprite.setPosition(33 + 21, 32 * (rows + 0.5));
+  flags_third_digit_sprite.setPosition(33 + 2 * 21, 32 * (rows + 0.5));
+  return std::make_tuple(flags_first_digit_sprite, flags_second_digit_sprite,
+                         flags_third_digit_sprite);
+}
+
+std::tuple<sf::Sprite, sf::Sprite, sf::Sprite, sf::Sprite>
+set_timer_digits(const std::map<std::string, sf::Texture *> &textures,
+                 const unsigned int rows, const unsigned int cols,
+                 const int minutes, const int seconds) {
+  std::string min_str = std::to_string(minutes);
+  assert(min_str.size() <= 2);
+  std::string sec_str = std::to_string(seconds);
+  assert(sec_str.size() <= 2);
+
+  sf::Sprite min_first_digit_sprite;
+  sf::Sprite min_second_digit_sprite;
+  sf::Sprite sec_first_digit_sprite;
+  sf::Sprite sec_second_digit_sprite;
+  min_first_digit_sprite.setTexture(*textures.at("digits"));
+  min_second_digit_sprite.setTexture(*textures.at("digits"));
+  sec_first_digit_sprite.setTexture(*textures.at("digits"));
+  sec_second_digit_sprite.setTexture(*textures.at("digits"));
+
+  sf::Rect digit_0_rect(0, 0, 21, 32);
+  sf::Rect digit_negative_sign_rect(10 * 21, 0, 21, 32);
+  if (min_str.size() == 2) {
+    match_digit(std::stoi(min_str.substr(0, 1)), min_first_digit_sprite);
+    match_digit(std::stoi(min_str.substr(1, 1)), min_second_digit_sprite);
+  } else if (min_str.size() == 1) {
+    min_first_digit_sprite.setTextureRect(digit_0_rect);
+    match_digit(std::stoi(min_str.substr(0, 1)), min_second_digit_sprite);
+  }
+  if (sec_str.size() == 2) {
+    match_digit(std::stoi(sec_str.substr(0, 1)), sec_first_digit_sprite);
+    match_digit(std::stoi(sec_str.substr(1, 1)), sec_second_digit_sprite);
+  } else if (sec_str.size() == 1) {
+    sec_first_digit_sprite.setTextureRect(digit_0_rect);
+    match_digit(std::stoi(sec_str.substr(0, 1)), sec_second_digit_sprite);
+  }
+
+  min_first_digit_sprite.setPosition(cols * 32 - 97, 32 * (rows + 0.5) + 16);
+  min_second_digit_sprite.setPosition(cols * 32 - 97 + 21,
+                                      32 * (rows + 0.5) + 16);
+  sec_first_digit_sprite.setPosition(cols * 32 - 54, 32 * (rows + 0.5) + 16);
+  sec_second_digit_sprite.setPosition(cols * 32 - 54 + 21,
+                                      32 * (rows + 0.5) + 16);
+  return std::make_tuple(min_first_digit_sprite, min_second_digit_sprite,
+                         sec_first_digit_sprite, sec_second_digit_sprite);
+}
 
 bool is_on_field(const int current_row, const int current_col,
                  const size_t board_rows, const size_t board_cols) {
@@ -21,7 +162,6 @@ void clear_empty_tiles(std::vector<std::vector<Tile>> &field,
                        const std::map<std::string, sf::Texture *> &textures,
                        std::vector<std::vector<sf::Sprite>> &tile_sprites,
                        const size_t row, const size_t col) {
-  std::cout << row << " " << col << std::endl;
   tile_sprites.at(row).at(col).setTexture(*textures.at("tile_revealed"));
   field.at(row).at(col).hidden = false;
   for (std::pair<int, int> tile : Config::NEIGHBOR_OFFSETS) {
@@ -54,7 +194,7 @@ int calculate_neighboring_mines(const std::vector<std::vector<Tile>> &field,
   if (!is_on_field(row, col, field.size(), field.at(0).size())) {
     return 0;
   }
-  int num_alive = 0;
+  int mines_nearby = 0;
   for (std::pair<int, int> tile : Config::NEIGHBOR_OFFSETS) {
     const int current_row = static_cast<int>(row) + tile.first;
     const int current_col = static_cast<int>(col) + tile.second;
@@ -62,10 +202,10 @@ int calculate_neighboring_mines(const std::vector<std::vector<Tile>> &field,
     if (is_on_field(current_row, current_col, field.size(),
                     field.at(0).size()) &&
         field.at(current_row).at(current_col).has_mine == true) {
-      num_alive++;
+      mines_nearby++;
     }
   }
-  return num_alive;
+  return mines_nearby;
 }
 
 void place_mines(std::vector<std::vector<Tile>> &field,
@@ -73,7 +213,7 @@ void place_mines(std::vector<std::vector<Tile>> &field,
   std::random_device random_device;
   std::mt19937 engine{random_device()};
   unsigned int count = 0;
-  while (count < 50) {
+  while (count < mines) {
     std::uniform_int_distribution<int> dist_rows(0, field.size() - 1);
     std::uniform_int_distribution<int> dist_cols(0, field.at(0).size() - 1);
     Tile &tile = field.at(dist_rows(engine)).at(dist_cols(engine));
@@ -87,6 +227,7 @@ void place_mines(std::vector<std::vector<Tile>> &field,
       field.at(i).at(j).mines_nearby = calculate_neighboring_mines(field, i, j);
     }
   }
+  /*
   for (int i = 0; i < field.size(); i++) {
     for (int j = 0; j < field.at(0).size(); j++) {
       if (field.at(i).at(j).has_mine == true) {
@@ -97,6 +238,7 @@ void place_mines(std::vector<std::vector<Tile>> &field,
     }
     std::cout << std::endl;
   }
+  */
 }
 
 void load_textures(std::map<std::string, sf::Texture *> &textures) {
@@ -222,10 +364,17 @@ void play_game() {
   Config config;
   config.read_config();
   bool debug_on = false;
-  bool paused = false;
   bool raspidorasilo = false;
+  int flags_to_place = config.mines;
+  auto start = std::chrono::steady_clock::now();
+  auto stop = std::chrono::steady_clock::now();
+  std::chrono::duration<double> seconds_before_pause =
+      stop - start; // idk how to write 0
+  std::chrono::duration<double> seconds_after_pause =
+      stop - start; // idk how to write 0
   std::vector<std::vector<Tile>> field(config.rows,
                                        std::vector<Tile>(config.cols, Tile{}));
+  bool paused = false;
   for (int i = 0; i < field.size(); i++) {
     for (int j = 0; j < field.at(0).size(); j++) {
       field.at(i).at(j).x = j;
@@ -265,6 +414,15 @@ void play_game() {
   leaderboard_sprite.setTexture(*textures.at("leaderboard"));
   leaderboard_sprite.setPosition(config.cols * 32 - 177,
                                  32 * (config.rows + 0.5));
+  auto [flags_first_digit_sprite, flags_second_digit_sprite,
+        flags_third_digit_sprite] =
+      set_flag_digits(textures, config.rows, flags_to_place);
+
+  int seconds = 0;
+  int minutes = 0;
+  auto [min_first_digit_sprite, min_second_digit_sprite, sec_first_digit_sprite,
+        sec_second_digit_sprite] =
+      set_timer_digits(textures, config.rows, config.cols, minutes, seconds);
 
   std::vector<std::vector<sf::Sprite>> tile_sprites(
       field.size(), std::vector<sf::Sprite>(field.at(0).size()));
@@ -327,12 +485,52 @@ void play_game() {
     }
   }
 
+  std::vector<std::vector<sf::Sprite>> flag_sprites(
+      field.size(), std::vector<sf::Sprite>(field.at(0).size()));
+  for (int i = 0; i < field.size(); i++) {
+    for (int j = 0; j < field.at(0).size(); j++) {
+      flag_sprites.at(i).at(j).setTexture(*textures.at("flag"));
+      flag_sprites.at(i).at(j).setPosition(32 * j, 32 * i);
+    }
+  }
+
   while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed) {
         window.close();
       }
+
+      // right click
+      if (event.type == sf::Event::MouseButtonPressed &&
+          event.mouseButton.button == sf::Mouse::Right) {
+        sf::Vector2f pixel_clicked =
+            window.mapPixelToCoords(sf::Mouse::getPosition(window));
+        // right clicked tile
+        for (int i = 0; i < flag_sprites.size(); i++) {
+          for (int j = 0; j < flag_sprites.at(0).size(); j++) {
+            if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
+                    pixel_clicked)) {
+              if (field.at(i).at(j).hidden == true) {
+                if (field.at(i).at(j).flagged == false) {
+                  flags_to_place--;
+                  field.at(i).at(j).flagged = true;
+                } else if (field.at(i).at(j).flagged == true) {
+                  flags_to_place++;
+                  field.at(i).at(j).flagged = false;
+                }
+                auto digit_sprites =
+                    set_flag_digits(textures, config.rows, flags_to_place);
+                flags_first_digit_sprite = std::get<0>(digit_sprites);
+                flags_second_digit_sprite = std::get<1>(digit_sprites);
+                flags_third_digit_sprite = std::get<2>(digit_sprites);
+              }
+            }
+          }
+        }
+      }
+
+      // left click
       if (event.type == sf::Event::MouseButtonPressed &&
           event.mouseButton.button == sf::Mouse::Left) {
         sf::Vector2f pixel_clicked =
@@ -351,9 +549,12 @@ void play_game() {
         if (play_pause_sprite.getGlobalBounds().contains(pixel_clicked)) {
           if (paused == false) {
             paused = true;
+            seconds_before_pause += stop - start;
+            seconds_after_pause = stop - stop; // idk how to write 0
             play_pause_sprite.setTexture(*textures.at("play"));
           } else if (paused == true) {
             paused = false;
+            start = std::chrono::steady_clock::now();
             play_pause_sprite.setTexture(*textures.at("pause"));
           }
         }
@@ -363,12 +564,14 @@ void play_game() {
           for (int j = 0; j < tile_sprites.at(0).size(); j++) {
             if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
                     pixel_clicked)) {
-              tile_sprites.at(i).at(j).setTexture(
-                  *textures.at("tile_revealed"));
-              field.at(i).at(j).hidden = false;
-              if (field.at(i).at(j).has_mine == false &&
-                  field.at(i).at(j).mines_nearby == 0) {
-                clear_empty_tiles(field, textures, tile_sprites, i, j);
+              if (field.at(i).at(j).flagged == false) {
+                tile_sprites.at(i).at(j).setTexture(
+                    *textures.at("tile_revealed"));
+                field.at(i).at(j).hidden = false;
+                if (field.at(i).at(j).has_mine == false &&
+                    field.at(i).at(j).mines_nearby == 0) {
+                  clear_empty_tiles(field, textures, tile_sprites, i, j);
+                }
               }
             }
           }
@@ -380,12 +583,11 @@ void play_game() {
     for (int i = 0; i < field.size(); i++) {
       for (int j = 0; j < field.at(0).size(); j++) {
         window.draw(tile_sprites.at(i).at(j));
-      }
-    }
-    for (int i = 0; i < field.size(); i++) {
-      for (int j = 0; j < field.at(0).size(); j++) {
         if (field.at(i).at(j).hidden == false) {
           window.draw(mine_or_digit_sprites.at(i).at(j));
+        }
+        if (field.at(i).at(j).flagged == true) {
+          window.draw(flag_sprites.at(i).at(j));
         }
       }
     }
@@ -394,10 +596,48 @@ void play_game() {
         window.draw(debug_mine_sprites.at(i));
       }
     }
+    if (paused == false) {
+      stop = std::chrono::steady_clock::now();
+      seconds_after_pause = stop - start;
+    }
+
     window.draw(face_happy_sprite);
     window.draw(debug_sprite);
     window.draw(play_pause_sprite);
     window.draw(leaderboard_sprite);
+    window.draw(flags_first_digit_sprite);
+    window.draw(flags_second_digit_sprite);
+    window.draw(flags_third_digit_sprite);
+
+    seconds =
+        (std::chrono::duration_cast<std::chrono::seconds>(seconds_before_pause)
+             .count() +
+         std::chrono::duration_cast<std::chrono::seconds>(seconds_after_pause)
+             .count()) %
+        60;
+    minutes =
+        (std::chrono::duration_cast<std::chrono::seconds>(seconds_before_pause)
+             .count() +
+         std::chrono::duration_cast<std::chrono::seconds>(seconds_after_pause)
+             .count()) /
+        60;
+    auto timer_sprites =
+        set_timer_digits(textures, config.rows, config.cols, minutes, seconds);
+    min_first_digit_sprite = std::get<0>(timer_sprites);
+    min_second_digit_sprite = std::get<1>(timer_sprites);
+    sec_first_digit_sprite = std::get<2>(timer_sprites);
+    sec_second_digit_sprite = std::get<3>(timer_sprites);
+
+    window.draw(min_first_digit_sprite);
+    window.draw(min_second_digit_sprite);
+    window.draw(sec_first_digit_sprite);
+    window.draw(sec_second_digit_sprite);
+
     window.display();
   }
+
+  for (auto &[name, ptr] : textures) {
+    delete ptr;
+  }
+  textures.clear();
 }
