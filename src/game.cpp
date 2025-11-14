@@ -162,8 +162,10 @@ void clear_empty_tiles(std::vector<std::vector<Tile>> &field,
                        const std::map<std::string, sf::Texture *> &textures,
                        std::vector<std::vector<sf::Sprite>> &tile_sprites,
                        const size_t row, const size_t col) {
-  tile_sprites.at(row).at(col).setTexture(*textures.at("tile_revealed"));
-  field.at(row).at(col).hidden = false;
+  if (field.at(row).at(col).flagged == false) {
+    tile_sprites.at(row).at(col).setTexture(*textures.at("tile_revealed"));
+    field.at(row).at(col).hidden = false;
+  }
   for (std::pair<int, int> tile : Config::NEIGHBOR_OFFSETS) {
     const int current_row = static_cast<int>(row) + tile.first;
     const int current_col = static_cast<int>(col) + tile.second;
@@ -180,7 +182,8 @@ void clear_empty_tiles(std::vector<std::vector<Tile>> &field,
     const int current_col = static_cast<int>(col) + tile.second;
     if (is_on_field(current_row, current_col, field.size(),
                     field.at(0).size()) &&
-        field.at(current_row).at(current_col).hidden == true) {
+        field.at(current_row).at(current_col).hidden == true &&
+        field.at(current_row).at(current_col).flagged == false) {
       tile_sprites.at(current_row)
           .at(current_col)
           .setTexture(*textures.at("tile_revealed"));
@@ -366,6 +369,8 @@ void play_game() {
   bool debug_on = false;
   bool raspidorasilo = false;
   int flags_to_place = config.mines;
+  int tiles_revealed = 0;
+  bool won = false;
   auto start = std::chrono::steady_clock::now();
   auto stop = std::chrono::steady_clock::now();
   std::chrono::duration<double> seconds_before_pause =
@@ -442,7 +447,6 @@ void play_game() {
     for (int j = 0; j < field.at(0).size(); j++) {
       if (field.at(i).at(j).has_mine == true) {
         mine_or_digit_sprites.at(i).at(j).setTexture(*textures.at("mine"));
-        raspidorasilo = true;
       } else {
         switch (field.at(i).at(j).mines_nearby) {
         case 1:
@@ -495,6 +499,36 @@ void play_game() {
   }
 
   while (window.isOpen()) {
+    tiles_revealed = 0;
+    for (int i = 0; i < field.size(); i++) {
+      for (int j = 0; j < field.at(0).size(); j++) {
+        if (field.at(i).at(j).hidden == false) {
+          tiles_revealed++;
+        }
+      }
+    }
+
+    if (flags_to_place == 0 &&
+        tiles_revealed == config.rows * config.cols - config.mines &&
+        raspidorasilo == false) {
+      won = true;
+      debug_on = true; // to draw the mines
+      paused = true;
+      face_happy_sprite.setTexture(*textures.at("face_win"));
+    } else if (raspidorasilo == true) {
+      face_happy_sprite.setTexture(*textures.at("face_lose"));
+      paused = true;
+      for (int i = 0; i < field.size(); i++) {
+        for (int j = 0; j < field.at(0).size(); j++) {
+          if (field.at(i).at(j).hidden == true &&
+              field.at(i).at(j).flagged == false) {
+            field.at(i).at(j).hidden = false;
+          }
+          debug_on = true; // to draw the mines
+        }
+      }
+    }
+
     sf::Event event;
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed) {
@@ -510,7 +544,8 @@ void play_game() {
         for (int i = 0; i < flag_sprites.size(); i++) {
           for (int j = 0; j < flag_sprites.at(0).size(); j++) {
             if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
-                    pixel_clicked)) {
+                    pixel_clicked) &&
+                won == false && raspidorasilo == false) {
               if (field.at(i).at(j).hidden == true) {
                 if (field.at(i).at(j).flagged == false) {
                   flags_to_place--;
@@ -537,7 +572,8 @@ void play_game() {
             window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
         // clicked debug button
-        if (debug_sprite.getGlobalBounds().contains(pixel_clicked)) {
+        if (debug_sprite.getGlobalBounds().contains(pixel_clicked) &&
+            won == false && raspidorasilo == false) {
           if (debug_on == false) {
             debug_on = true;
           } else if (debug_on == true) {
@@ -545,8 +581,9 @@ void play_game() {
           }
         }
 
-        // clicked debug button
-        if (play_pause_sprite.getGlobalBounds().contains(pixel_clicked)) {
+        // clicked play/pause button
+        if (play_pause_sprite.getGlobalBounds().contains(pixel_clicked) &&
+            won == false && raspidorasilo == false) {
           if (paused == false) {
             paused = true;
             seconds_before_pause += stop - start;
@@ -563,7 +600,8 @@ void play_game() {
         for (int i = 0; i < tile_sprites.size(); i++) {
           for (int j = 0; j < tile_sprites.at(0).size(); j++) {
             if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
-                    pixel_clicked)) {
+                    pixel_clicked) &&
+                won == false && raspidorasilo == false) {
               if (field.at(i).at(j).flagged == false) {
                 tile_sprites.at(i).at(j).setTexture(
                     *textures.at("tile_revealed"));
@@ -571,6 +609,8 @@ void play_game() {
                 if (field.at(i).at(j).has_mine == false &&
                     field.at(i).at(j).mines_nearby == 0) {
                   clear_empty_tiles(field, textures, tile_sprites, i, j);
+                } else if (field.at(i).at(j).has_mine == true) {
+                  raspidorasilo = true;
                 }
               }
             }
@@ -580,6 +620,7 @@ void play_game() {
     }
 
     window.clear(sf::Color::White);
+
     for (int i = 0; i < field.size(); i++) {
       for (int j = 0; j < field.at(0).size(); j++) {
         window.draw(tile_sprites.at(i).at(j));
