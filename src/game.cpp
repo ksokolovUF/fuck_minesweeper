@@ -1,14 +1,65 @@
 #include "game.hpp"
 #include "config.hpp"
+#include "leaderboard.hpp"
 #include <SFML/Graphics.hpp>
 #include <array>
 #include <assert.h>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
 #include <tuple>
 #include <vector>
+
+void end_game() {}
+
+void record_top(const int minutes, const int seconds, const Config &config) {
+  std::string minutes_str;
+  std::string seconds_str;
+  if (minutes == 0) {
+    minutes_str = "00";
+  } else if (minutes / 10 == 0) {
+    minutes_str = "0" + std::to_string(minutes);
+  }
+  if (seconds / 10 == 0) {
+    seconds_str = "0" + std::to_string(seconds);
+  }
+  std::fstream ifile("files/leaderboard.txt");
+  std::string top_str;
+  bool player_time_recorded = false;
+  if (ifile) {
+    std::string line;
+    int index = 1;
+    int current_mins;
+    int current_secs;
+    while (std::getline(ifile, line) && index <= 5) {
+      current_mins = std::stoi(line.substr(0, 2));
+      current_secs = std::stoi(line.substr(3, 2));
+      int current_time = current_mins * 60 + current_secs;
+      int player_time = minutes * 60 + seconds;
+      if (player_time <= current_time && !player_time_recorded) {
+        player_time_recorded = true;
+        std::string new_line =
+            minutes_str + ":" + seconds_str + ", " + Config::name + "*";
+        top_str += new_line;
+        top_str += '\n';
+        index++;
+        top_str += line;
+        top_str += '\n';
+        index++;
+      } else {
+        top_str += line;
+        top_str += '\n';
+        index++;
+      }
+    }
+  }
+  ifile.close();
+  std::ofstream ofile("files/leaderboard.txt", std::ios::trunc);
+  ofile << top_str;
+  ofile.close();
+}
 
 void match_digit(const unsigned int num, sf::Sprite &sprite) {
   sf::Rect flags_digit_0_rect(0, 0, 21, 32);
@@ -363,13 +414,14 @@ void load_hidden_mines(const std::vector<std::vector<Tile>> &field,
   }
 }
 
-void play_game() {
+bool play_game() {
   Config config;
   bool debug_on = false;
   bool raspidorasilo = false;
   int flags_to_place = config.mines;
   int tiles_revealed = 0;
   bool won = false;
+  bool ran_victory_stuff = false;
   auto start = std::chrono::steady_clock::now();
   auto stop = std::chrono::steady_clock::now();
   std::chrono::duration<double> seconds_before_pause =
@@ -379,6 +431,7 @@ void play_game() {
   std::vector<std::vector<Tile>> field(config.rows,
                                        std::vector<Tile>(config.cols, Tile{}));
   bool paused = false;
+  bool leaderboard_launched = false;
   for (int i = 0; i < field.size(); i++) {
     for (int j = 0; j < field.at(0).size(); j++) {
       field.at(i).at(j).x = j;
@@ -402,6 +455,16 @@ void play_game() {
 
   std::vector<sf::Sprite> debug_mine_sprites(config.mines);
   load_hidden_mines(field, textures, debug_mine_sprites);
+
+  std::vector<std::vector<sf::Sprite>> revealed_tile_sprites(
+      field.size(), std::vector<sf::Sprite>(field.at(0).size()));
+  for (int i = 0; i < field.size(); i++) {
+    for (int j = 0; j < field.at(0).size(); j++) {
+      revealed_tile_sprites.at(i).at(j).setTexture(
+          *textures.at("tile_revealed"));
+      revealed_tile_sprites.at(i).at(j).setPosition(32 * j, 32 * i);
+    }
+  }
 
   sf::Sprite face_happy_sprite;
   face_happy_sprite.setTexture(*textures.at("face_happy"));
@@ -514,6 +577,10 @@ void play_game() {
       debug_on = true; // to draw the mines
       paused = true;
       face_happy_sprite.setTexture(*textures.at("face_win"));
+      if (!ran_victory_stuff) {
+        ran_victory_stuff = true;
+        record_top(minutes, seconds, config);
+      }
     } else if (raspidorasilo == true) {
       face_happy_sprite.setTexture(*textures.at("face_lose"));
       paused = true;
@@ -582,7 +649,7 @@ void play_game() {
 
         // clicked play/pause button
         if (play_pause_sprite.getGlobalBounds().contains(pixel_clicked) &&
-            won == false && raspidorasilo == false) {
+            !won && !raspidorasilo && !leaderboard_launched) {
           if (paused == false) {
             paused = true;
             seconds_before_pause += stop - start;
@@ -593,6 +660,32 @@ void play_game() {
             start = std::chrono::steady_clock::now();
             play_pause_sprite.setTexture(*textures.at("pause"));
           }
+        }
+
+        // clicked leaderboard button
+        if (leaderboard_sprite.getGlobalBounds().contains(pixel_clicked) &&
+            won == false && raspidorasilo == false) {
+          paused = true;
+          seconds_before_pause += stop - start;
+          seconds_after_pause = stop - stop; // idk how to write 0
+          leaderboard_launched = true;
+          for (int i = 0; i < field.size(); i++) {
+            for (int j = 0; j < field.at(0).size(); j++) {
+              std::cout << i << j;
+              window.draw(revealed_tile_sprites.at(i).at(j));
+            }
+          }
+          window.display();
+          launch_leaderboard();
+          leaderboard_launched = false;
+          paused = false;
+          start = std::chrono::steady_clock::now();
+        }
+
+        // clicked leaderboard button
+        if (face_happy_sprite.getGlobalBounds().contains(pixel_clicked)) {
+          window.close();
+          return true;
         }
 
         // clicked tile
@@ -636,6 +729,7 @@ void play_game() {
         window.draw(debug_mine_sprites.at(i));
       }
     }
+
     if (paused == false) {
       stop = std::chrono::steady_clock::now();
       seconds_after_pause = stop - start;
@@ -680,4 +774,5 @@ void play_game() {
     delete ptr;
   }
   textures.clear();
+  return false;
 }

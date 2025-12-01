@@ -13,6 +13,7 @@ void user_name_input(const sf::Event &event, std::string &name,
     name.pop_back();
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) &&
              name.size() >= 1) {
+    Config::name = name;
     window.close();
   } else if (std::isalpha(static_cast<char>(u))) {
     if (name.size() == 10) {
@@ -66,7 +67,8 @@ void launch_welcome() {
     window.draw(welcome_text);
     window.draw(enter_name_text);
 
-    Config::set_text(input_name_text, window_height / 2, window_length / 2 - 45);
+    Config::set_text(input_name_text, window_height / 2,
+                     window_length / 2 - 45);
     window.draw(input_name_text);
     window.display();
   }

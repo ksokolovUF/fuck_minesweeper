@@ -14,9 +14,9 @@ void Config::read_config() {
   ifile.close();
 }
 
-Config::Config() {
-  read_config();
-}
+Config::Config() { read_config(); }
+
+std::string Config::name = "";
 
 void Config::set_text(sf::Text &text, float x, float y) {
   sf::FloatRect textRect = text.getLocalBounds();

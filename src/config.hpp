@@ -1,11 +1,14 @@
 #pragma once
-#include <array>
 #include <SFML/Graphics.hpp>
+#include <array>
+#include <string>
+
 class Config {
 public:
   unsigned int cols;
   unsigned int rows;
   unsigned int mines;
+  static std::string name;
   void read_config();
   Config();
   static constexpr std::array<std::pair<int, int>, 8> NEIGHBOR_OFFSETS = {

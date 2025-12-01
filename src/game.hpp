@@ -7,4 +7,4 @@ struct Tile {
   unsigned int y = 0;
 };
 
-void play_game();
+bool play_game();
