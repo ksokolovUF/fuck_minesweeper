@@ -365,7 +365,6 @@ void load_hidden_mines(const std::vector<std::vector<Tile>> &field,
 
 void play_game() {
   Config config;
-  config.read_config();
   bool debug_on = false;
   bool raspidorasilo = false;
   int flags_to_place = config.mines;
