@@ -3,10 +3,10 @@
 
 void start_game(sf::RenderWindow window) { window.close(); }
 
-void user_name_input(const sf::Event &event, std::string &name,
+bool user_name_input(const sf::Event &event, std::string &name,
                      sf::RenderWindow &window) {
   if (event.type != sf::Event::TextEntered) {
-    return;
+    return false;
   }
   const uint32_t u = event.text.unicode;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace) && !name.empty()) {
@@ -15,9 +15,10 @@ void user_name_input(const sf::Event &event, std::string &name,
              name.size() >= 1) {
     Config::name = name;
     window.close();
+    return true;
   } else if (std::isalpha(static_cast<char>(u))) {
     if (name.size() == 10) {
-      return;
+      return false;
     }
     if (name.empty()) {
       name += std::toupper(static_cast<char>(u));
@@ -25,9 +26,10 @@ void user_name_input(const sf::Event &event, std::string &name,
       name += std::tolower(static_cast<char>(u));
     }
   }
+  return false;
 }
 
-void launch_welcome() {
+bool launch_welcome() {
   Config config;
   const unsigned int window_height = 800;
   const unsigned int window_length = 600;
@@ -55,11 +57,13 @@ void launch_welcome() {
   while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
-      user_name_input(event, name, window);
+      if (user_name_input(event, name, window))
+        return true;
       input_name_text.setString(name + "|");
 
       if (event.type == sf::Event::Closed) {
         window.close();
+        return false;
       }
     }
 

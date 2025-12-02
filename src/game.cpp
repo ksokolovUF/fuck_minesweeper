@@ -22,7 +22,9 @@ void record_top(const int minutes, const int seconds, const Config &config) {
   } else if (minutes / 10 == 0) {
     minutes_str = "0" + std::to_string(minutes);
   }
-  if (seconds / 10 == 0) {
+  if (seconds == 0) {
+    seconds_str = "00";
+  } else if (seconds / 10 == 0) {
     seconds_str = "0" + std::to_string(seconds);
   }
   std::fstream ifile("files/leaderboard.txt");
@@ -281,18 +283,6 @@ void place_mines(std::vector<std::vector<Tile>> &field,
       field.at(i).at(j).mines_nearby = calculate_neighboring_mines(field, i, j);
     }
   }
-  /*
-  for (int i = 0; i < field.size(); i++) {
-    for (int j = 0; j < field.at(0).size(); j++) {
-      if (field.at(i).at(j).has_mine == true) {
-        std::cout << "X";
-      } else {
-        std::cout << field.at(i).at(j).mines_nearby;
-      }
-    }
-    std::cout << std::endl;
-  }
-  */
 }
 
 void load_textures(std::map<std::string, sf::Texture *> &textures) {
@@ -587,8 +577,10 @@ bool play_game() {
       for (int i = 0; i < field.size(); i++) {
         for (int j = 0; j < field.at(0).size(); j++) {
           if (field.at(i).at(j).hidden == true &&
-              field.at(i).at(j).flagged == false) {
+              field.at(i).at(j).flagged == false &&
+              field.at(i).at(j).has_mine) {
             field.at(i).at(j).hidden = false;
+            tile_sprites.at(i).at(j).setTexture(*textures.at("tile_revealed"));
           }
           debug_on = true; // to draw the mines
         }
@@ -611,7 +603,7 @@ bool play_game() {
           for (int j = 0; j < flag_sprites.at(0).size(); j++) {
             if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
                     pixel_clicked) &&
-                won == false && raspidorasilo == false) {
+                !won && !raspidorasilo && !paused) {
               if (field.at(i).at(j).hidden == true) {
                 if (field.at(i).at(j).flagged == false) {
                   flags_to_place--;
@@ -664,22 +656,26 @@ bool play_game() {
 
         // clicked leaderboard button
         if (leaderboard_sprite.getGlobalBounds().contains(pixel_clicked) &&
-            won == false && raspidorasilo == false) {
-          paused = true;
-          seconds_before_pause += stop - start;
-          seconds_after_pause = stop - stop; // idk how to write 0
+            !leaderboard_launched) {
+          bool was_paused = paused;
+          if (!was_paused) {
+            paused = true;
+            seconds_before_pause += stop - start;
+            seconds_after_pause = stop - stop; // idk how to write 0
+          }
           leaderboard_launched = true;
           for (int i = 0; i < field.size(); i++) {
             for (int j = 0; j < field.at(0).size(); j++) {
-              std::cout << i << j;
               window.draw(revealed_tile_sprites.at(i).at(j));
             }
           }
           window.display();
           launch_leaderboard();
           leaderboard_launched = false;
-          paused = false;
-          start = std::chrono::steady_clock::now();
+          if (!was_paused) {
+            paused = false;
+            start = std::chrono::steady_clock::now();
+          }
         }
 
         // clicked leaderboard button
@@ -693,7 +689,7 @@ bool play_game() {
           for (int j = 0; j < tile_sprites.at(0).size(); j++) {
             if (tile_sprites.at(i).at(j).getGlobalBounds().contains(
                     pixel_clicked) &&
-                won == false && raspidorasilo == false) {
+                !won && !raspidorasilo && !paused) {
               if (field.at(i).at(j).flagged == false) {
                 tile_sprites.at(i).at(j).setTexture(
                     *textures.at("tile_revealed"));
@@ -702,6 +698,13 @@ bool play_game() {
                     field.at(i).at(j).mines_nearby == 0) {
                   clear_empty_tiles(field, textures, tile_sprites, i, j);
                 } else if (field.at(i).at(j).has_mine == true) {
+                  for (int i = 0; i < field.size(); i++) {
+                    for (int j = 0; j < field.at(0).size(); j++) {
+                      if (field.at(i).at(j).has_mine)
+                        tile_sprites.at(i).at(j).setTexture(
+                            *textures.at("tile_revealed"));
+                    }
+                  }
                   raspidorasilo = true;
                 }
               }
@@ -730,7 +733,15 @@ bool play_game() {
       }
     }
 
-    if (paused == false) {
+    if (paused) {
+      for (int i = 0; i < field.size(); i++) {
+        for (int j = 0; j < field.at(0).size(); j++) {
+          window.draw(revealed_tile_sprites.at(i).at(j));
+        }
+      }
+    }
+
+    if (!paused) {
       stop = std::chrono::steady_clock::now();
       seconds_after_pause = stop - start;
     }
