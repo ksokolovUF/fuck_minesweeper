@@ -25,8 +25,12 @@ void launch_leaderboard() {
     std::string line;
     int index = 1;
     while (std::getline(stream, line)) {
-      line = std::to_string(index) + ".\t" + line.substr(0, 5) + "\t" +
-             line.substr(6);
+      if (Config::name == line.substr(7))
+        line = std::to_string(index) + ".\t" + line.substr(0, 5) + "\t" +
+               line.substr(6) + "*";
+      else
+        line = std::to_string(index) + ".\t" + line.substr(0, 5) + "\t" +
+               line.substr(6);
       top_str += line;
       top_str += '\n';
       index++;

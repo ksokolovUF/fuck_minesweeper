@@ -43,7 +43,7 @@ void record_top(const int minutes, const int seconds, const Config &config) {
       if (player_time <= current_time && !player_time_recorded) {
         player_time_recorded = true;
         std::string new_line =
-            minutes_str + ":" + seconds_str + ", " + Config::name + "*";
+            minutes_str + ":" + seconds_str + ", " + Config::name;
         top_str += new_line;
         top_str += '\n';
         index++;
@@ -733,7 +733,7 @@ bool play_game() {
       }
     }
 
-    if (paused) {
+    if (paused && !won && !raspidorasilo) {
       for (int i = 0; i < field.size(); i++) {
         for (int j = 0; j < field.at(0).size(); j++) {
           window.draw(revealed_tile_sprites.at(i).at(j));
