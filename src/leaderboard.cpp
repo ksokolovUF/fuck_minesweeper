@@ -33,6 +33,7 @@ void launch_leaderboard() {
                line.substr(6);
       top_str += line;
       top_str += '\n';
+      top_str += '\n';
       index++;
     }
   }
