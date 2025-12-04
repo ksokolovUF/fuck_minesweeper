@@ -6,7 +6,7 @@ void launch_leaderboard() {
   Config config;
   const unsigned int window_height = config.rows * 16 + 50;
   const unsigned int window_length = config.cols * 16;
-  sf::RenderWindow window(sf::VideoMode(window_height, window_length),
+  sf::RenderWindow window(sf::VideoMode(window_length, window_height),
                           "SFML window", sf::Style::Close);
   sf::Font font;
   if (!font.loadFromFile("./files/font.ttf")) {
@@ -14,8 +14,8 @@ void launch_leaderboard() {
   }
   sf::Text leaderboard_text("LEADERBOARD", font, 20);
   leaderboard_text.setFillColor(sf::Color::White);
-  Config::set_text(leaderboard_text, window_height / 2,
-                   window_length / 2 - 120);
+  Config::set_text(leaderboard_text, window_length / 2,
+                   window_height / 2 - 120);
   leaderboard_text.setStyle(sf::Text::Bold);
   leaderboard_text.setStyle(sf::Text::Underlined);
 
@@ -39,7 +39,7 @@ void launch_leaderboard() {
 
   sf::Text top_text(top_str, font, 18);
   top_text.setFillColor(sf::Color::White);
-  Config::set_text(top_text, window_height / 2, window_length / 2 + 20);
+  Config::set_text(top_text, window_length / 2, window_height / 2 + 20);
   top_text.setStyle(sf::Text::Bold);
 
   while (window.isOpen()) {

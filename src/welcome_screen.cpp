@@ -31,9 +31,9 @@ bool user_name_input(const sf::Event &event, std::string &name,
 
 bool launch_welcome() {
   Config config;
-  const unsigned int window_height = 800;
-  const unsigned int window_length = 600;
-  sf::RenderWindow window(sf::VideoMode(window_height, window_length),
+  const unsigned int window_height = config.rows * 32 + 100;
+  const unsigned int window_length = config.cols * 32;
+  sf::RenderWindow window(sf::VideoMode(window_length, window_height),
                           "SFML window", sf::Style::Close);
   sf::Font font;
   if (!font.loadFromFile("./files/font.ttf")) {
@@ -43,16 +43,16 @@ bool launch_welcome() {
   welcome_text.setFillColor(sf::Color::White);
   welcome_text.setStyle(sf::Text::Bold);
   welcome_text.setStyle(sf::Text::Underlined);
-  Config::set_text(welcome_text, window_height / 2, window_length / 2 - 150);
+  Config::set_text(welcome_text, window_length / 2, window_height / 2 - 150);
   sf::Text enter_name_text("Enter your name:", font, 20);
   enter_name_text.setFillColor(sf::Color::White);
   enter_name_text.setStyle(sf::Text::Bold);
-  Config::set_text(enter_name_text, window_height / 2, window_length / 2 - 75);
+  Config::set_text(enter_name_text, window_length / 2, window_height / 2 - 75);
   std::string name;
   sf::Text input_name_text("|", font, 18);
   input_name_text.setFillColor(sf::Color::Yellow);
   input_name_text.setStyle(sf::Text::Bold);
-  Config::set_text(input_name_text, window_height / 2, window_length / 2 - 45);
+  Config::set_text(input_name_text, window_length / 2, window_height / 2 - 45);
 
   while (window.isOpen()) {
     sf::Event event;
@@ -71,8 +71,8 @@ bool launch_welcome() {
     window.draw(welcome_text);
     window.draw(enter_name_text);
 
-    Config::set_text(input_name_text, window_height / 2,
-                     window_length / 2 - 45);
+    Config::set_text(input_name_text, window_length / 2,
+                     window_height / 2 - 45);
     window.draw(input_name_text);
     window.display();
   }
