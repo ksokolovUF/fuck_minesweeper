@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ki/uf/classes/cop3504c/project_2
+CMAKE_SOURCE_DIR = /home/ki/classes/cop3504c/project_2
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ki/uf/classes/cop3504c/project_2
+CMAKE_BINARY_DIR = /home/ki/classes/cop3504c/project_2
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ki/uf/classes/cop3504c/project_2/CMakeFiles /home/ki/uf/classes/cop3504c/project_2//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ki/classes/cop3504c/project_2/CMakeFiles /home/ki/classes/cop3504c/project_2//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ki/uf/classes/cop3504c/project_2/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ki/classes/cop3504c/project_2/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -177,6 +177,30 @@ src/game.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/the-sweeper.dir/build.make CMakeFiles/the-sweeper.dir/src/game.cpp.s
 .PHONY : src/game.cpp.s
 
+src/leaderboard.o: src/leaderboard.cpp.o
+.PHONY : src/leaderboard.o
+
+# target to build an object file
+src/leaderboard.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/the-sweeper.dir/build.make CMakeFiles/the-sweeper.dir/src/leaderboard.cpp.o
+.PHONY : src/leaderboard.cpp.o
+
+src/leaderboard.i: src/leaderboard.cpp.i
+.PHONY : src/leaderboard.i
+
+# target to preprocess a source file
+src/leaderboard.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/the-sweeper.dir/build.make CMakeFiles/the-sweeper.dir/src/leaderboard.cpp.i
+.PHONY : src/leaderboard.cpp.i
+
+src/leaderboard.s: src/leaderboard.cpp.s
+.PHONY : src/leaderboard.s
+
+# target to generate assembly for a file
+src/leaderboard.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/the-sweeper.dir/build.make CMakeFiles/the-sweeper.dir/src/leaderboard.cpp.s
+.PHONY : src/leaderboard.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -240,6 +264,9 @@ help:
 	@echo "... src/game.o"
 	@echo "... src/game.i"
 	@echo "... src/game.s"
+	@echo "... src/leaderboard.o"
+	@echo "... src/leaderboard.i"
+	@echo "... src/leaderboard.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
